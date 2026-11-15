@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<title>אתגר הכימיה</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{color-scheme:dark;--bg:#101827;--panel:#1b2940;--muted:#aab8cc;--accent:#7c9cff;--good:#36c98f;--bad:#ff6f7d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#243a60,var(--bg) 55%);font-family:system-ui,Arial,sans-serif;color:#f5f7fb;min-height:100vh;padding:18px}
+main{max-width:620px;margin:0 auto;padding-top:12px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px}.tag{background:#2a3b58;border-radius:99px;padding:7px 12px;font-size:13px;color:#dce7ff}
+h1{font-size:29px;margin:18px 0 4px}.sub{color:var(--muted);margin:0 0 20px}.card{background:#1b2940;border:1px solid #344761;border-radius:22px;padding:20px;box-shadow:0 15px 40px #0004}
+.progress{height:8px;background:#34445d;border-radius:20px;overflow:hidden;margin:8px 0 22px}.bar{height:100%;width:0;background:linear-gradient(90deg,#6d91ff,#9e7cff);transition:width .25s}
+.meta{display:flex;justify-content:space-between;color:var(--muted);font-size:13px}.question{font-size:23px;line-height:1.4;margin:14px 0 8px}.hint{color:var(--muted);font-size:13px;margin-bottom:16px}
+.answers{display:grid;gap:10px}.answer{width:100%;text-align:right;color:#f5f7fb;background:#243550;border:1px solid #405675;border-radius:15px;padding:14px;font-size:16px;cursor:pointer}.answer:active{transform:scale(.99)}.answer.selected{border:2px solid var(--accent);background:#2c4167}.answer.correct{border:2px solid var(--good);background:#174b42}.answer.wrong{border:2px solid var(--bad);background:#522d3a}
+button.primary{border:0;background:linear-gradient(100deg,#6e91ff,#9475ff);color:white;font-weight:700;font-size:16px;padding:14px 18px;border-radius:14px;width:100%;margin-top:16px;cursor:pointer}
+button.secondary{border:1px solid #536987;background:#243550;color:white;border-radius:12px;padding:10px 14px;font-size:14px;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}.feedback{margin-top:16px;padding:14px;border-radius:14px;background:#263750;line-height:1.5}.feedback.good{border:1px solid var(--good)}.feedback.bad{border:1px solid var(--bad)}
+.hidden{display:none}.score{font-size:48px;font-weight:800;text-align:center;margin:14px}.center{text-align:center}.small{font-size:13px;color:var(--muted)}.actions{display:grid;gap:10px;margin-top:18px}
+</style>
+</head>
+<body>
+<main>
+ <div class="top"><span class="tag">🧪 לומדים בכיף</span><button id="install" class="secondary hidden">התקן אפליקציה</button></div>
+ <h1>אתגר הכימיה</h1><p class="sub">חידון אקראי על האטום והמשפחות הכימיות</p>
+ <section id="quiz" class="card">
+  <div class="meta"><span id="counter">שאלה 1 מתוך 10</span><span id="points">ניקוד: 0</span></div>
+  <div class="progress"><div id="bar" class="bar"></div></div>
+  <div id="question" class="question"></div><div id="hint" class="hint"></div>
+  <div id="answers" class="answers"></div>
+  <div id="feedback" class="feedback hidden"></div>
+  <button id="next" class="primary" disabled>בדוק תשובה</button>
+ </section>
+ <section id="result" class="card hidden">
+  <div class="center"><div class="tag">🏆 סיימת את החידון</div><div id="score" class="score">0/10</div><h2 id="message">כל הכבוד!</h2><p id="detail" class="small"></p></div>
+  <div class="actions"><button id="again" class="primary">ערבב והתחל מחדש</button><button id="review" class="secondary">הצג תשובות</button></div>
+  <div id="reviewList" class="hidden"></div>
+ </section>
+ <p class="small center" style="margin-top:18px">השאלות והתשובות מתערבבות בכל ניסיון · עובד גם ללא אינטרנט לאחר ההתקנה</p>
+</main>
+<script>
+const bank = [
+ {q:"לאיזו משפחה שייך הכלור (Cl)?",a:["גזים אצילים","מתכות אלקליות","משפחת החמצן","הלוגנים"],c:3,e:"כלור הוא הלוגן, כמו פלואור וברום."},
+ {q:"לאיזו משפחה שייך הארגון (Ar)?",a:["הלוגנים","גזים אצילים","מתכות אלקליות","משפחת החמצן"],c:1,e:"ארגון הוא גז אציל."},
+ {q:"לאיזו משפחה שייך הפלואור (F)?",a:["מתכות אלקליות","משפחת החמצן","הלוגנים","גזים אצילים"],c:2,e:"פלואור שייך למשפחת ההלוגנים."},
+ {q:"לאיזו משפחה שייך הנתרן (Na)?",a:["מתכות אלקליות","הלוגנים","גזים אצילים","משפחת החמצן"],c:0,e:"נתרן הוא מתכת אלקלית."},
+ {q:"לאיזו משפחה שייך הליתיום (Li)?",a:["גזים אצילים","מתכות מעבר","מתכות אלקליות","הלוגנים"],c:2,e:"ליתיום הוא מתכת אלקלית, כמו נתרן ואשלגן."},
+ {q:"בחר את כל היסודות ששייכים למשפחת ההלוגנים.",a:["ברום (Br)","ארגון (Ar)","כלור (Cl)","פלואור (F)"],c:[0,2,3],e:"ברום, כלור ופלואור הם הלוגנים.",multi:true},
+ {q:"הליום (He) שייך למשפחת הגזים האצילים.",a:["נכון","לא נכון"],c:0,e:"הליום הוא גז אציל."},
+ {q:"אשלגן (K) שייך למשפחת ההלוגנים.",a:["נכון","לא נכון"],c:1,e:"אשלגן הוא מתכת אלקלית, לא הלוגן."},
+ {q:"לאיזו משפחה שייך החמצן (O)?",a:["גזים אצילים","הלוגנים","משפחת החמצן","מתכות אלקליות"],c:2,e:"חמצן שייך למשפחת החמצן."},
+ {q:"איזה יסוד שייך למשפחת הגזים האצילים?",a:["נתרן (Na)","ניאון (Ne)","ברום (Br)","חמצן (O)"],c:1,e:"ניאון הוא גז אציל."},
+ {q:"לאיזו משפחה שייכת הגופרית (S)?",a:["משפחת החמצן","מתכות אלקליות","הלוגנים","גזים אצילים"],c:0,e:"גופרית שייכת למשפחת החמצן."},
+ {q:"איזה מהבאים הוא הלוגן?",a:["ארגון (Ar)","ליתיום (Li)","פלואור (F)","ניאון (Ne)"],c:2,e:"פלואור הוא הלוגן."},
+ {q:"בחר את כל המתכות האלקליות.",a:["ליתיום (Li)","ארגון (Ar)","נתרן (Na)","אשלגן (K)"],c:[0,2,3],multi:true,e:"ליתיום, נתרן ואשלגן הם מתכות אלקליות."},
+ {q:"האם כלור (Cl) ופלואור (F) שייכים לאותה משפחה?",a:["נכון","לא נכון"],c:0,e:"שניהם שייכים למשפחת ההלוגנים."},
+ {q:"לאיזו משפחה שייך הסלניום (Se)?",a:["גזים אצילים","משפחת החמצן","מתכות אלקליות","הלוגנים"],c:1,e:"סלניום שייך למשפחת החמצן."},
+ {q:"איזה יסוד הוא גז אציל?",a:["אשלגן (K)","ברום (Br)","חמצן (O)","הליום (He)"],c:3,e:"הליום הוא גז אציל."},
+ {q:"מה קורה לאטום כאשר הוא מקבל 2 אלקטרונים?",a:["נוצר יון חיובי 2+","נוצר יון שלילי 2-","מספר הפרוטונים גדל","האטום נשאר ניטרלי"],c:1,e:"קבלת שני אלקטרונים יוצרת מטען שלילי 2-."},
+ {q:"איזה חלקיק קובע את זהותו של היסוד?",a:["מספר הפרוטונים","מספר האלקטרונים","מספר הנייטרונים","המסה"],c:0,e:"מספר הפרוטונים הוא המספר האטומי וקובע את זהות היסוד."},
+ {q:"אילו חלקיקים נמצאים בגרעין האטום?",a:["אלקטרונים בלבד","פרוטונים בלבד","פרוטונים ונייטרונים","אלקטרונים ונייטרונים"],c:2,e:"בגרעין נמצאים פרוטונים ונייטרונים."},
+ {q:"שני אטומים של אותו יסוד יכולים להכיל מספר שונה של נייטרונים.",a:["נכון","לא נכון"],c:0,e:"אלה איזוטופים של אותו יסוד."}
+];
+const $=id=>document.getElementById(id);
+let deck=[],idx=0,score=0,chosen=[],locked=false,history=[];
+function shuffle(arr){let a=[...arr];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function start(){deck=shuffle(bank).slice(0,10).map(q=>{let order=shuffle(q.a.map((_,i)=>i));let correct=Array.isArray(q.c)?q.c.map(x=>order.indexOf(x)).sort((a,b)=>a-b):order.indexOf(q.c);return {...q,a:order.map(i=>q.a[i]),c:correct};});idx=0;score=0;history=[];$("result").classList.add("hidden");$("quiz").classList.remove("hidden");render();}
+function render(){let q=deck[idx];chosen=[];locked=false;$("counter").textContent=`שאלה ${idx+1} מתוך ${deck.length}`;$("points").textContent=`ניקוד: ${score}`;$("bar").style.width=`${idx/deck.length*100}%`;$("question").textContent=q.q;$("hint").textContent=q.multi?"אפשר לבחור כמה תשובות":"בחר תשובה אחת";$("feedback").className="feedback hidden";$("next").disabled=true;$("next").textContent="בדוק תשובה";$("answers").innerHTML="";
+q.a.forEach((a,i)=>{let b=document.createElement("button");b.className="answer";b.textContent=a;b.onclick=()=>pick(i,b);$("answers").appendChild(b);});}
+function pick(i,b){if(locked)return;let q=deck[idx];if(q.multi){chosen=chosen.includes(i)?chosen.filter(x=>x!==i):[...chosen,i];b.classList.toggle("selected");}else{chosen=[i];[...$("answers").children].forEach(x=>x.classList.remove("selected"));b.classList.add("selected");}$("next").disabled=chosen.length===0;}
+function check(){let q=deck[idx],correct=Array.isArray(q.c)?chosen.length===q.c.length&&q.c.every(x=>chosen.includes(x)):chosen.length===1&&chosen[0]===q.c;locked=true;if(correct)score++;history.push({q,chosen:[...chosen],correct});[...$("answers").children].forEach((b,i)=>{b.disabled=true;if(Array.isArray(q.c)?q.c.includes(i):i===q.c)b.classList.add("correct");else if(chosen.includes(i))b.classList.add("wrong");});$("feedback").className="feedback "+(correct?"good":"bad");$("feedback").textContent=(correct?"✅ נכון! ":"❌ לא נכון. ")+q.e;$("points").textContent=`ניקוד: ${score}`;$("next").disabled=false;$("next").textContent=idx===deck.length-1?"לתוצאות":"לשאלה הבאה";}
+function next(){if(!locked){check();return;}if(idx<deck.length-1){idx++;render();}else finish();}
+function finish(){$("quiz").classList.add("hidden");$("result").classList.remove("hidden");$("score").textContent=`${score}/10`;$("bar").style.width="100%";$("message").textContent=score>=9?"אלוף! שליטה מעולה 🏆":score>=7?"עבודה טובה! ממשיכים להשתפר 💪":"כל ניסיון מלמד משהו חדש 🧠";$("detail").textContent=`ענית נכון על ${score} מתוך 10 שאלות. בכל ניסיון השאלות וסדר התשובות מתערבבים.`;$("reviewList").classList.add("hidden");$("reviewList").innerHTML=history.map((h,i)=>`<div class="feedback ${h.correct?"good":"bad"}"><b>${i+1}. ${h.q.q}</b><br>תשובה נכונה: ${Array.isArray(h.q.c)?h.q.c.map(x=>h.q.a[x]).join(", "):h.q.a[h.q.c]}<br>${h.q.e}</div>`).join("");}
+$("next").onclick=next;$("again").onclick=start;$("review").onclick=()=>{$("reviewList").classList.toggle("hidden");};start();
+let installPrompt;$("install").onclick=async()=>{if(installPrompt){installPrompt.prompt();installPrompt=null;$("install").classList.add("hidden");}};
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e;$("install").classList.remove("hidden");});
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
+</script>
+</body></html>

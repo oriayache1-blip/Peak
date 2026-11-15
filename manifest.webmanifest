@@ -1,0 +1,12 @@
+{
+  "name": "אתגר הכימיה",
+  "short_name": "אתגר הכימיה",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101827",
+  "theme_color": "#101827",
+  "description": "חידון אקראי ללימוד האטום והמשפחות הכימיות"
+}
